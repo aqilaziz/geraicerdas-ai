@@ -1,89 +1,419 @@
-import { useState, useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import Papa from "papaparse";
-import { DataContext } from "../context/AppContext";
+import { CheckCircle2, Database, RefreshCw, Save, UploadCloud } from "lucide-react";
+import { DataContext } from "../context/DataContext";
 import { demoData } from "../data/demoData";
-export default function CSVParser() {
-  const { transactions, setTransactions } = useContext(DataContext);
-  const [data, setData] = useState([]);
-  const hasTransactions = transactions?.length > 0;
+import { normalizeTransaction } from "../lib/analytics";
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
+const fieldNames = [
+  "Date",
+  "Description",
+  "Amount",
+  "Channel",
+  "Type",
+  "Product",
+  "Quantity",
+  "Customer",
+];
+
+function demoCsv() {
+  const escape = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  return [
+    fieldNames.join(","),
+    ...demoData.map((row) => fieldNames.map((field) => escape(row[field])).join(",")),
+  ].join("\n");
+}
+
+export default function Settings() {
+  const {
+    transactions,
+    setTransactions,
+    profile,
+    setProfile,
+    aiSettings,
+    setAiSettings,
+    resetDemo,
+    clearAll,
+  } = useContext(DataContext);
+  const [manual, setManual] = useState({
+    Date: new Date().toISOString().slice(0, 10),
+    Description: "Penjualan WhatsApp - Produk UMKM",
+    Amount: "250000",
+    Channel: "WhatsApp",
+    Type: "Revenue",
+    Product: "",
+    Quantity: "1",
+    Customer: "",
+  });
+  const [uploadStatus, setUploadStatus] = useState("");
+  const [profileDraft, setProfileDraft] = useState(profile);
+  const [profileSaveStatus, setProfileSaveStatus] = useState("Tersimpan");
+  const [aiDraft, setAiDraft] = useState(aiSettings);
+  const [aiSaveStatus, setAiSaveStatus] = useState("Tersimpan otomatis");
+
+  useEffect(() => {
+    setProfileDraft(profile);
+  }, [profile]);
+
+  useEffect(() => {
+    setAiDraft(aiSettings);
+  }, [aiSettings]);
+
+  const handleFile = (event) => {
+    const file = event.target.files[0];
     if (!file) return;
 
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        setData(results.data);
-        localStorage.setItem("transactions", JSON.stringify(results.data));
-        setTransactions(results.data);
+        const rows = results.data.map(normalizeTransaction);
+        setTransactions(rows);
+        setUploadStatus(`${rows.length} transaksi dimuat`);
       },
     });
   };
 
-  const handleClearData = () => {
-    const confirmed = window.confirm("Clear all saved transaction data?");
-    if (!confirmed) return;
+  const addManualTransaction = () => {
+    setTransactions((current) => [normalizeTransaction(manual), ...current]);
+    setManual((current) => ({
+      ...current,
+      Description: "",
+      Amount: "",
+      Product: "",
+      Quantity: "",
+      Customer: "",
+    }));
+  };
 
-    localStorage.removeItem("transactions");
-    setTransactions([]);
-    setData([]);
+  const downloadTemplate = () => {
+    const blob = new Blob([demoCsv()], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "template-transaksi-umkm.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const saveProfile = () => {
+    setProfile(profileDraft);
+    setProfileSaveStatus("Profil UMKM tersimpan");
+  };
+
+  const updateProfileDraft = (field, value) => {
+    setProfileDraft((current) => ({ ...current, [field]: value }));
+    setProfileSaveStatus("Belum disimpan");
+  };
+
+  const saveAiSettings = () => {
+    setAiSettings(aiDraft);
+    setAiSaveStatus("Konfigurasi AI tersimpan");
+  };
+
+  const updateAiDraft = (field, value) => {
+    setAiDraft((current) => ({ ...current, [field]: value }));
+    setAiSaveStatus("Belum disimpan");
   };
 
   return (
-    <div className="max-w-4xl animate-in fade-in duration-500">
-      <div className="retro-card p-8 mb-8">
-        <h2 className="text-[#FF6B00] text-lg font-black uppercase tracking-widest mb-6">Data Source</h2>
-        
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="form-control w-full max-w-xs">
-            <label className="label">
-              <span className="label-text text-gray-400 font-bold uppercase tracking-wider text-xs">Upload CSV File</span>
+    <div className="space-y-6">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="app-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-teal-50 p-2 text-teal-700">
+                <Database size={22} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-950">
+                  Profil UMKM
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Dipakai AI untuk membaca konteks bisnis.
+                </p>
+              </div>
+            </div>
+            <span className="hidden rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 sm:inline-flex">
+              {profileSaveStatus}
+            </span>
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="form-field">
+              <span>Nama usaha</span>
+              <input
+                value={profileDraft.name}
+                onChange={(event) =>
+                  updateProfileDraft("name", event.target.value)
+                }
+              />
             </label>
-            <input
-              type="file"
-              accept=".csv"
-              className="file-input file-input-bordered bg-[#111111] border-[#1F1F1F] text-gray-300 w-full rounded-none focus:border-[#FF6B00] outline-none hover:border-[#FF6B00]/50 transition-colors file:bg-[#FF6B00] file:text-black file:border-none file:uppercase file:font-bold file:px-4"
-              onChange={handleFile}
-            />
+            <label className="form-field">
+              <span>Pemilik</span>
+              <input
+                value={profileDraft.owner}
+                onChange={(event) =>
+                  updateProfileDraft("owner", event.target.value)
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Kota</span>
+              <input
+                value={profileDraft.city}
+                onChange={(event) =>
+                  updateProfileDraft("city", event.target.value)
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Kategori</span>
+              <input
+                value={profileDraft.category}
+                onChange={(event) =>
+                  updateProfileDraft("category", event.target.value)
+                }
+              />
+            </label>
+            <label className="form-field sm:col-span-2">
+              <span>Value proposition</span>
+              <textarea
+                rows={3}
+                value={profileDraft.uniqueValue}
+                onChange={(event) =>
+                  updateProfileDraft("uniqueValue", event.target.value)
+                }
+              />
+            </label>
           </div>
-          
-          <div className="hidden md:flex items-center text-gray-600 font-black uppercase text-sm">Or</div>
-          
-          <div className="w-full md:w-auto md:mt-7 flex flex-col sm:flex-row gap-3">
-            <button
-              className="retro-btn w-full md:w-auto flex items-center justify-center gap-2"
-              onClick={() => {
-                setTransactions(demoData);
-                localStorage.setItem("transactions", JSON.stringify(demoData));
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Load Demo Data
-            </button>
-            <button
-              className="retro-btn w-full md:w-auto flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-40"
-              onClick={handleClearData}
-              disabled={!hasTransactions}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
-              Clear Data
-            </button>
-          </div>
+          <button
+            type="button"
+            className="primary-button mt-5 w-full sm:w-auto"
+            onClick={saveProfile}
+          >
+            <Save size={18} />
+            Simpan profil UMKM
+          </button>
+          <p className="mt-3 text-sm text-slate-500 sm:hidden">
+            {profileSaveStatus}
+          </p>
         </div>
-      </div>
 
-      {data && data.length > 0 && (
-        <div className="retro-card p-8">
-          <h2 className="text-[#FF6B00] text-lg font-black uppercase tracking-widest mb-6">Raw Parsed Data</h2>
-          <div className="bg-[#0A0A0A] border border-[#1F1F1F] p-4 max-h-96 overflow-y-auto">
-            <pre className="text-xs text-gray-400 font-mono">
-              {JSON.stringify(data, null, 2)}
-            </pre>
+        <div className="app-card p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+              <UploadCloud size={22} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">
+                Data transaksi
+              </h2>
+              <p className="text-sm text-slate-500">
+                Format CSV: Date, Description, Amount, Channel, Type, Product,
+                Quantity, Customer.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-center hover:border-teal-600">
+              <UploadCloud className="text-slate-500" size={24} />
+              <span className="mt-2 text-sm font-medium text-slate-700">
+                Upload CSV
+              </span>
+              <input
+                type="file"
+                accept=".csv"
+                className="sr-only"
+                onChange={handleFile}
+              />
+            </label>
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Data aktif</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-950">
+                {transactions.length} transaksi
+              </p>
+              <p className="mt-2 text-sm text-teal-700">{uploadStatus}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button type="button" className="secondary-button" onClick={downloadTemplate}>
+              <Save size={18} />
+              Template CSV
+            </button>
+            <button type="button" className="secondary-button" onClick={resetDemo}>
+              <RefreshCw size={18} />
+              Muat demo
+            </button>
+            <button type="button" className="danger-button" onClick={clearAll}>
+              Kosongkan
+            </button>
           </div>
         </div>
-      )}
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="app-card p-5">
+          <h2 className="text-lg font-semibold text-slate-950">
+            Tambah transaksi cepat
+          </h2>
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <label className="form-field">
+              <span>Tanggal</span>
+              <input
+                type="date"
+                value={manual.Date}
+                onChange={(event) =>
+                  setManual({ ...manual, Date: event.target.value })
+                }
+              />
+            </label>
+            <label className="form-field md:col-span-2">
+              <span>Deskripsi</span>
+              <input
+                value={manual.Description}
+                onChange={(event) =>
+                  setManual({ ...manual, Description: event.target.value })
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Nominal</span>
+              <input
+                type="number"
+                value={manual.Amount}
+                onChange={(event) =>
+                  setManual({ ...manual, Amount: event.target.value })
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Channel</span>
+              <select
+                value={manual.Channel}
+                onChange={(event) =>
+                  setManual({ ...manual, Channel: event.target.value })
+                }
+              >
+                <option>WhatsApp</option>
+                <option>Instagram</option>
+                <option>Shopee</option>
+                <option>Offline</option>
+                <option>Logistik</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span>Kategori</span>
+              <select
+                value={manual.Type}
+                onChange={(event) =>
+                  setManual({ ...manual, Type: event.target.value })
+                }
+              >
+                <option>Revenue</option>
+                <option>Bahan Baku</option>
+                <option>Marketing</option>
+                <option>Logistik</option>
+                <option>Operasional</option>
+                <option>Gaji</option>
+                <option>Marketplace Fee</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span>Produk</span>
+              <input
+                value={manual.Product}
+                onChange={(event) =>
+                  setManual({ ...manual, Product: event.target.value })
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Pelanggan</span>
+              <input
+                value={manual.Customer}
+                onChange={(event) =>
+                  setManual({ ...manual, Customer: event.target.value })
+                }
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            className="primary-button mt-5"
+            onClick={addManualTransaction}
+          >
+            Simpan transaksi
+          </button>
+        </div>
+
+        <div className="app-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">
+                Endpoint AI
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Isi provider AI, lalu klik simpan sebelum memakai Mode AI endpoint.
+              </p>
+            </div>
+            <span className="hidden items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 sm:inline-flex">
+              <CheckCircle2 size={14} />
+              {aiSaveStatus}
+            </span>
+          </div>
+          <div className="mt-5 space-y-4">
+            <label className="form-field">
+              <span>Provider</span>
+              <input
+                value={aiDraft.providerName}
+                onChange={(event) =>
+                  updateAiDraft("providerName", event.target.value)
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Endpoint chat completions</span>
+              <input
+                value={aiDraft.endpoint}
+                placeholder="https://api.example.com/v1/chat/completions"
+                onChange={(event) =>
+                  updateAiDraft("endpoint", event.target.value)
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Model</span>
+              <input
+                value={aiDraft.model}
+                onChange={(event) =>
+                  updateAiDraft("model", event.target.value)
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>API key</span>
+              <input
+                type="password"
+                value={aiDraft.apiKey}
+                onChange={(event) =>
+                  updateAiDraft("apiKey", event.target.value)
+                }
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            className="primary-button mt-5 w-full sm:w-auto"
+            onClick={saveAiSettings}
+          >
+            <Save size={18} />
+            Simpan konfigurasi AI
+          </button>
+          <p className="mt-3 text-sm text-slate-500 sm:hidden">{aiSaveStatus}</p>
+        </div>
+      </section>
     </div>
   );
 }

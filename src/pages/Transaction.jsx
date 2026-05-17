@@ -1,54 +1,159 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { DataContext } from "../context/AppContext";
-import categorize from "../components/utils/categorize";
+import { Download, Search } from "lucide-react";
+import { DataContext } from "../context/DataContext";
+import {
+  formatCurrency,
+  getAnalytics,
+  normalizeTransaction,
+} from "../lib/analytics";
+
+function toCsv(rows) {
+  const headers = [
+    "Date",
+    "Description",
+    "Amount",
+    "Channel",
+    "Type",
+    "Product",
+    "Quantity",
+    "Customer",
+  ];
+  const escape = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  return [
+    headers.join(","),
+    ...rows.map((row) => headers.map((header) => escape(row[header])).join(",")),
+  ].join("\n");
+}
 
 export default function Transaction() {
-  const { transactions } = React.useContext(DataContext);
-  return transactions && transactions.length > 0 ? (
-    <div className="retro-card overflow-x-auto animate-in fade-in duration-500">
-      <table className="table w-full border-collapse">
-        <thead>
-          <tr className="bg-[#111111] text-[#FF6B00] border-b border-[#1F1F1F] uppercase tracking-widest text-sm">
-            <th className="py-4 px-6 font-bold">Date</th>
-            <th className="py-4 px-6 font-bold">Description</th>
-            <th className="py-4 px-6 font-bold text-right">Amount</th>
-            <th className="py-4 px-6 font-bold">Category</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions?.map((data, i) => (
-            <tr key={i} className="border-b border-[#1F1F1F]/50 hover:bg-[#1a1a1a] transition-colors">
-              <td className="py-4 px-6 text-gray-400 whitespace-nowrap">{data.Date}</td>
-              <td className="py-4 px-6 font-medium max-w-sm truncate" title={data.Description}>{data.Description}</td>
-              <td className={`py-4 px-6 font-black text-right whitespace-nowrap ${Number(data.Amount) > 0 ? 'text-[#00C49F]' : 'text-white'}`}>
-                {Number(data.Amount) > 0 ? '+' : ''}{data.Amount}
-              </td>
-              <td className="py-4 px-6">
-                <span className="bg-[#1F1F1F] text-gray-300 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-sm border border-[#2a2a2a]">
-                  {categorize(data.Description)}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
-      <div className="retro-card p-12 flex flex-col items-center max-w-md text-center border-[#FF6B00]/30 shadow-[0_0_20px_rgba(255,107,0,0.1)]">
-        <div className="w-16 h-16 bg-[#FF6B00]/10 flex items-center justify-center rounded-full mb-6 text-[#FF6B00]">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+  const { transactions, products } = React.useContext(DataContext);
+  const analytics = React.useMemo(
+    () => getAnalytics(transactions, products),
+    [products, transactions],
+  );
+  const [query, setQuery] = React.useState("");
+  const [channel, setChannel] = React.useState("Semua");
+  const [type, setType] = React.useState("Semua");
+
+  const channels = [
+    "Semua",
+    ...new Set(analytics.transactions.map((item) => item.Channel)),
+  ];
+  const types = ["Semua", ...new Set(analytics.transactions.map((item) => item.Type))];
+
+  const filtered = analytics.transactions.filter((item) => {
+    const text = `${item.Description} ${item.Product} ${item.Customer}`.toLowerCase();
+    const matchQuery = text.includes(query.toLowerCase());
+    const matchChannel = channel === "Semua" || item.Channel === channel;
+    const matchType = type === "Semua" || item.Type === type;
+    return matchQuery && matchChannel && matchType;
+  });
+
+  const downloadCsv = () => {
+    const blob = new Blob([toCsv(filtered)], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "geraicerdas-transaksi.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6">
+      <section className="app-card p-5">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_180px_180px_auto]">
+          <label className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-sm outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Cari transaksi, produk, pelanggan"
+            />
+          </label>
+          <select
+            className="h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            value={channel}
+            onChange={(event) => setChannel(event.target.value)}
+          >
+            {channels.map((name) => (
+              <option key={name}>{name}</option>
+            ))}
+          </select>
+          <select
+            className="h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            value={type}
+            onChange={(event) => setType(event.target.value)}
+          >
+            {types.map((name) => (
+              <option key={name}>{name}</option>
+            ))}
+          </select>
+          <button type="button" className="secondary-button" onClick={downloadCsv}>
+            <Download size={18} />
+            Export
+          </button>
         </div>
-        <h2 className="text-2xl font-black tracking-wider text-white mb-2 uppercase">No Transactions</h2>
-        <p className="text-gray-400 mb-8 leading-relaxed">No transactions found. Upload your data to view the history.</p>
-        <Link 
-          to='/settings' 
-          className="retro-btn"
-        >
-          Configure Settings
-        </Link>
-      </div>
+      </section>
+
+      <section className="app-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500">
+              <tr>
+                <th className="px-5 py-4 font-medium">Tanggal</th>
+                <th className="px-5 py-4 font-medium">Deskripsi</th>
+                <th className="px-5 py-4 font-medium">Channel</th>
+                <th className="px-5 py-4 font-medium">Kategori</th>
+                <th className="px-5 py-4 text-right font-medium">Nominal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((raw, index) => {
+                const item = normalizeTransaction(raw);
+                return (
+                  <tr
+                    key={`${item.Date}-${item.Description}-${index}`}
+                    className="border-t border-slate-100"
+                  >
+                    <td className="whitespace-nowrap px-5 py-4 text-slate-500">
+                      {item.Date}
+                    </td>
+                    <td className="min-w-[320px] px-5 py-4">
+                      <p className="font-medium text-slate-950">
+                        {item.Description}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.Product || "Operasional"}{" "}
+                        {item.Customer ? `- ${item.Customer}` : ""}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 text-slate-600">{item.Channel}</td>
+                    <td className="px-5 py-4">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                        {item.Type}
+                      </span>
+                    </td>
+                    <td
+                      className={`whitespace-nowrap px-5 py-4 text-right font-semibold ${
+                        item.Amount >= 0 ? "text-teal-700" : "text-rose-700"
+                      }`}
+                    >
+                      {formatCurrency(item.Amount)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

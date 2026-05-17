@@ -1,25 +1,26 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Budgets from "./pages/Budgets";
 import Settings from "./pages/Settings";
 import Transaction from "./pages/Transaction";
 import Layout from "./components/layout/Layout";
-import {AppContext} from "./context/AppContext";
+import Copilot from "./pages/Copilot";
+import { AppContext } from "./context/AppContext";
+
 export default function App() {
   return (
-    <>
     <AppContext>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="copilot" element={<Copilot />} />
             <Route path="budgets" element={<Budgets />} />
             <Route path="settings" element={<Settings />} />
             <Route path="transaction" element={<Transaction />} />
           </Route>
         </Routes>
       </BrowserRouter>
-      </AppContext>
-    </>
+    </AppContext>
   );
 }

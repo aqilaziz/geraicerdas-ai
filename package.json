@@ -1,5 +1,5 @@
 {
-  "name": "finboard",
+  "name": "geraicerdas-ai",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -33,6 +33,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "tailwindcss": "^4.2.2",
+    "vercel": "^54.1.0",
     "vite": "^8.0.4"
   }
 }

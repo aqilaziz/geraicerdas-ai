@@ -1,23 +1,43 @@
+import { useContext } from "react";
+import { Menu, Sparkles } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { DataContext } from "../../context/DataContext";
+
+const titles = {
+  "/": "Dashboard UMKM",
+  "/copilot": "AI Copilot",
+  "/budgets": "Pricing & Restock",
+  "/transaction": "Transaksi",
+  "/settings": "Data & AI",
+};
 
 export default function Header() {
   const location = useLocation();
-  
-  const getPageTitle = () => {
-    const path = location.pathname;
-    if (path === "/") return "Dashboard";
-    const title = path.replace("/", "");
-    return title.charAt(0).toUpperCase() + title.slice(1);
-  };
+  const { profile } = useContext(DataContext);
 
   return (
-    <header className="h-16 border-b border-fin-border bg-fin-card flex items-center px-4 md:px-8 shrink-0 gap-4 transition-all duration-300 w-full z-40">
-      <label htmlFor="mobile-drawer" className="p-2 cursor-pointer hover:bg-[#1a1a1a] rounded-md transition-colors lg:hidden text-[#FF6B00]">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-      </label>
-      <h1 className="text-xl font-bold tracking-wider text-white uppercase truncate">
-        {getPageTitle()}
-      </h1>
+    <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <label
+          htmlFor="mobile-drawer"
+          className="icon-button lg:hidden"
+          aria-label="Buka menu"
+        >
+          <Menu size={22} />
+        </label>
+        <div className="min-w-0">
+          <h1 className="truncate text-lg font-semibold text-slate-950">
+            {titles[location.pathname] || "GeraiCerdas AI"}
+          </h1>
+          <p className="truncate text-sm text-slate-500">
+            {profile.name} - {profile.category}
+          </p>
+        </div>
+      </div>
+      <div className="hidden items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-700 sm:flex">
+        <Sparkles size={16} />
+        Generative AI MVP
+      </div>
     </header>
   );
 }
