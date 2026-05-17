@@ -5,9 +5,11 @@ import { demoData } from "../data/demoData";
 export default function CSVParser() {
   const { transactions, setTransactions } = useContext(DataContext);
   const [data, setData] = useState([]);
+  const hasTransactions = transactions?.length > 0;
 
   const handleFile = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
 
     Papa.parse(file, {
       header: true,
@@ -18,6 +20,15 @@ export default function CSVParser() {
         setTransactions(results.data);
       },
     });
+  };
+
+  const handleClearData = () => {
+    const confirmed = window.confirm("Clear all saved transaction data?");
+    if (!confirmed) return;
+
+    localStorage.removeItem("transactions");
+    setTransactions([]);
+    setData([]);
   };
 
   return (
@@ -40,7 +51,7 @@ export default function CSVParser() {
           
           <div className="hidden md:flex items-center text-gray-600 font-black uppercase text-sm">Or</div>
           
-          <div className="w-full md:w-auto md:mt-7">
+          <div className="w-full md:w-auto md:mt-7 flex flex-col sm:flex-row gap-3">
             <button
               className="retro-btn w-full md:w-auto flex items-center justify-center gap-2"
               onClick={() => {
@@ -50,6 +61,14 @@ export default function CSVParser() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               Load Demo Data
+            </button>
+            <button
+              className="retro-btn w-full md:w-auto flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleClearData}
+              disabled={!hasTransactions}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+              Clear Data
             </button>
           </div>
         </div>
