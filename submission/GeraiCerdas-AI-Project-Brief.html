@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project Brief - GeraiCerdas AI</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f1f5f9;
+        color: #0f172a;
+        font-family: Inter, Arial, sans-serif;
+        line-height: 1.65;
+      }
+
+      main {
+        max-width: 860px;
+        margin: 32px auto;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 42px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.15;
+      }
+
+      h2 {
+        margin-top: 34px;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 22px;
+        font-size: 21px;
+      }
+
+      p,
+      li {
+        font-size: 15px;
+      }
+
+      .meta {
+        margin-top: 10px;
+        color: #475569;
+      }
+
+      .badge {
+        display: inline-block;
+        margin-top: 18px;
+        border-radius: 999px;
+        background: #ccfbf1;
+        color: #115e59;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+        background: #f8fafc;
+      }
+
+      a {
+        color: #0f766e;
+      }
+
+      @media (max-width: 720px) {
+        main {
+          margin: 0;
+          border-radius: 0;
+          padding: 24px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Project Brief - GeraiCerdas AI</h1>
+      <p class="meta">
+        MVP untuk Dicoding Challenge 973: IDCamp Developer Challenge #2 -
+        Digitalization & Acceleration of MSMEs with Generative AI.
+      </p>
+      <span class="badge">AI business copilot untuk UMKM Indonesia</span>
+
+      <h2>Ringkasan</h2>
+      <p>
+        GeraiCerdas AI adalah web app untuk membantu UMKM Indonesia mempercepat
+        digitalisasi bisnis dengan Generative AI. Produk ini mengubah data
+        transaksi sederhana menjadi insight operasional, rekomendasi harga,
+        alarm stok, konten promosi, dan balasan pelanggan yang siap digunakan di
+        WhatsApp, Instagram, marketplace, atau toko offline.
+      </p>
+
+      <h2>Masalah</h2>
+      <p>
+        Banyak UMKM masih mencatat transaksi manual, sulit membaca margin,
+        tidak tahu channel mana yang paling efektif, sering terlambat restock,
+        dan tidak punya waktu membuat konten promosi maupun membalas calon
+        pelanggan dengan cepat.
+      </p>
+
+      <h2>Solusi</h2>
+      <div class="grid">
+        <div class="card">Dashboard keuangan UMKM: revenue, biaya, laba, margin, channel, komposisi biaya.</div>
+        <div class="card">AI Copilot: diagnosis usaha, rekomendasi growth, eksperimen, copy promosi, dan balasan pelanggan.</div>
+        <div class="card">Pricing & Restock: kalkulator harga berbasis modal, fee marketplace, kompetitor, stok, dan lead time.</div>
+        <div class="card">Data & AI: import CSV, input transaksi cepat, profil UMKM, dan endpoint OpenAI-compatible opsional.</div>
+      </div>
+
+      <h2>Kesesuaian Tema</h2>
+      <p>
+        GeraiCerdas AI berfokus langsung pada kebutuhan UMKM: pencatatan
+        transaksi, pemasaran digital, respons pelanggan, pricing, dan stok. AI
+        dipakai sebagai copilot praktis, bukan sekadar chatbot umum.
+      </p>
+
+      <h2>Penggunaan AI</h2>
+      <ol>
+        <li>Local insight engine untuk rekomendasi berbasis transaksi dan stok tanpa biaya API.</li>
+        <li>Endpoint OpenAI-compatible opsional untuk menghasilkan rekomendasi generatif eksternal.</li>
+      </ol>
+
+      <h2>Dampak</h2>
+      <ul>
+        <li>Pemilik UMKM bisa memahami kondisi bisnis tanpa spreadsheet kompleks.</li>
+        <li>Konten promosi dan balasan pelanggan bisa dibuat dalam hitungan detik.</li>
+        <li>Risiko stok habis dapat diketahui sebelum penjualan terganggu.</li>
+        <li>Harga jual dapat dievaluasi berdasarkan modal, fee marketplace, margin, dan kompetitor.</li>
+      </ul>
+
+      <h2>Target Pengguna</h2>
+      <p>
+        UMKM makanan ringan, fesyen, kerajinan, reseller, atau toko lokal yang
+        berjualan melalui WhatsApp, Instagram, marketplace, dan toko offline.
+      </p>
+
+      <h2>Keunggulan</h2>
+      <ul>
+        <li>Fokus pada bahasa dan pola kerja UMKM Indonesia.</li>
+        <li>Bisa langsung dipakai dari browser.</li>
+        <li>Data demo Indonesia tersedia untuk validasi cepat.</li>
+        <li>Mendukung CSV dari kasir, marketplace, atau pembukuan sederhana.</li>
+        <li>Tidak bergantung pada satu provider AI.</li>
+      </ul>
+
+      <h2>Pengembangan dan Atribusi</h2>
+      <p>
+        GeraiCerdas AI dikembangkan dari basis awal dashboard keuangan FinBoard
+        oleh khanirfan18, lalu dimodifikasi besar untuk use case baru yang
+        sesuai challenge. Modifikasi utama meliputi perubahan domain ke UMKM,
+        data demo lokal, AI Copilot, pricing & restock, input transaksi,
+        endpoint AI, live market signal USD/IDR, dan dokumentasi submission.
+      </p>
+
+      <h2>Teknologi</h2>
+      <p>React 19, Vite, Tailwind CSS, Recharts, PapaParse, dan Lucide React.</p>
+
+      <h2>Link</h2>
+      <ul>
+        <li>Repository: <a href="https://github.com/aqilaziz/geraicerdas-ai">https://github.com/aqilaziz/geraicerdas-ai</a></li>
+        <li>Challenge: <a href="https://www.dicoding.com/challenges/973">https://www.dicoding.com/challenges/973</a></li>
+      </ul>
+    </main>
+  </body>
+</html>
